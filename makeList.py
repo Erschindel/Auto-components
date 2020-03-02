@@ -24,14 +24,12 @@ lowerComponents = []
 firstWithSubs = []
 paragraphs = []
 
-#identify and separate components
+#regular expressions; identify and separate components
 r1 = "(?<=\na )(.*)(?=;)|(?<=\nan )(.*)(?=;)|(?<=\n)(at.*)(?=;)"
 firstCompRaw = re.findall(r1, claims)
 formatList(firstCompRaw, firstComponents, 3)
 for comp in firstComponents:
-    components.append({comp: []})
-
-print(components)
+    components.append(comp)
 
 r2 = "(?<=\nthe )(.*)(?= further comprises)|(?<=\nthe )(.*)(?= comprises)"
 firstWithSubsRaw = re.findall(r2, claims)
@@ -48,28 +46,120 @@ paragraphs.append(re.findall(r4, claims))
 
 #fill components dictionary with appropriate subcomponents
 r5 = "(?<=the )(.*)(?= further comprises)|(?<=the )(.*)(?= comprises)"
+r6 = "(?<=the )(.*)(?= further comprises)"
+
+secondComponents = []
+thirdComponents = []
+fourthComponents = []
+fifthComponents = []
+
 for line in range(len(paragraphs[0])) :
     key = re.findall(r5, paragraphs[0][line])
     cleanKey = []
     formatList(key, cleanKey, 2)
-    preFormat = re.findall(r3, paragraphs[0][line])
+    check = re.findall(r6, paragraphs[0][line])
+    inlineComps = re.findall(r3, paragraphs[0][line])
+    #check if the line contains new subcomponents
     if key :
         chunk = []
-        cleanSubs = []
-        formatList(preFormat, cleanSubs, 15)
-        for each in range(len(preFormat)) :
-            for comp in range(len(preFormat[each])) :
-                if preFormat[each][comp] :
-                    chunk.append(preFormat[each][comp])
-        for i in range(len(components)) :
-            jkl = list(components[i].keys())
-            if jkl[0] == cleanKey[0] :
-                for subcomp in range(len(chunk)) :
-                    components[i][cleanKey[0]].append({chunk[subcomp]:[]})
-#        for i in range(len(components)) :
-#            jkl = list(components[i].keys())
-#            if(components[i][jkl[0]]) :
-#                for j in range(len(components[i][jkl[0]])) :
-#                    thirdLevelKeys = list(components[i][jkl[0]][j].keys())
-#                    print(thirdLevelKeys[0])
-print(components)
+        #ordered list of parent components
+        parentComponent = cleanKey[len(cleanKey) - 1]
+
+        #find new subcomponents in given line
+        for each in range(len(inlineComps)) :
+            for comp in range(len(inlineComps[each])) :
+                if inlineComps[each][comp] :
+                    chunk.append(inlineComps[each][comp])
+        for i in range(len(chunk)) :
+            #separate components into levels
+            if(parentComponent in firstComponents) :
+                secondComponents.append(chunk[i])
+            elif(parentComponent in secondComponents) :
+                thirdComponents.append(chunk[i])
+            elif(parentComponent in thirdComponents) :
+                fourthComponents.append(chunk[i])
+            elif(parentComponent in fourthComponents) :
+                fifthComponents.append(chunk[i])
+
+            nextComp = components[components.index(parentComponent)]
+        #add all subcomponents to components[] in correct order
+            #second-level components
+            if(check and (chunk[i] in secondComponents)) :
+                components.insert(components.index(firstComponents[firstComponents.index(parentComponent) + 1]), f"{chunk[i]}")
+            #third-level components. NOTE: can make function to shorten third- and fourth-level component handling maybe?
+            elif(check and (chunk[i] in thirdComponents)) :
+                if(parentComponent in secondComponents) :
+                    while nextComp not in secondComponents or nextComp not in firstComponents :
+                        nextComp = components[components.index(nextComp) + 1]
+                        if(components.index(nextComp) == len(components) - 1) :
+                            components.append(f"{chunk[len(chunk) - i - 1]}")
+                            break
+                        elif(nextComp in secondComponents or nextComp in firstComponents) :
+                            break
+                    if(components.index(nextComp) != len(components) - 1) :
+                        components.insert(components.index(nextComp), f"{chunk[i]}")
+                elif(parentComponent in firstComponents) :
+                    if(nextComp not in firstComponents) :
+                        if(components.index(nextComp) != len(components) - 1) :
+                            while(nextComp not in secondComponents or nextComp not in firstComponents) :
+                                nextComp = components[components.index(parentComponent) + 1]
+                        else :
+                            components.append(f"{chunk[len(chunk) - i - 1]}")
+                    if(components.index(nextComp) != len(components) - 1) :
+                        components.insert(components.index(nextComp) - 1, f"{chunk[len(chunk) - i - 1]}")
+                else :
+                    components.append(f"{chunk[len(chunk) - i - 1]}")
+            #fourth-level components
+            elif(check and (chunk[i] in fourthComponents)) :
+                if(parentComponent in thirdComponents) :
+                    while nextComp not in thirdComponents or nextComp not in secondComponents or nextComp not in firstComponents :
+                        nextComp = components[components.index(nextComp) + 1]
+                        if(components.index(nextComp) == len(components) - 1) :
+                            components.append(f"{chunk[len(chunk) - i - 1]}")
+                            break
+                        elif(nextComp in thirdComponents or nextComp in secondComponents or nextComp in firstComponents) :
+                            break
+                    if(components.index(nextComp) != len(components) - 1) :
+                        components.insert(components.index(nextComp), f"{chunk[i]}")
+                elif(parentComponent in secondComponents) :
+                    while nextComp not in secondComponents or nextComp not in firstComponents :
+                        nextComp = components[components.index(nextComp) + 1]
+                        if(components.index(nextComp) == len(components) - 1) :
+                            components.append(f"{chunk[len(chunk) - i - 1]}")
+                            break
+                        elif(nextComp in secondComponents or nextComp in firstComponents) :
+                            break
+                    if(components.index(nextComp) != len(components) - 1) :
+                        components.insert(components.index(nextComp), f"{chunk[i]}")
+                elif(parentComponent in firstComponents) :
+                    if(nextComp not in firstComponents) :
+                        if(components.index(nextComp) != len(components) - 1) :
+                            while(nextComp not in secondComponents or nextComp not in firstComponents) :
+                                nextComp = components[components.index(parentComponent) + 1]
+                        else :
+                            components.append(f"{chunk[len(chunk) - i - 1]}")
+                    if(components.index(nextComp) != len(components) - 1) :
+                        components.insert(components.index(nextComp) - 1, f"{chunk[len(chunk) - i - 1]}")
+                else :
+                    components.append(f"{chunk[len(chunk) - i - 1]}")
+            else:
+                components.insert(components.index(parentComponent) + 1, f"{chunk[len(chunk) - i - 1]}")
+
+# print(f"\n{components}")
+
+#generate components word document with component numbers
+componentsDoc = docx.Document()
+for component in range(0, len(components)) :
+    if(components[component] in firstComponents) :
+        componentsDoc.add_paragraph(f"{components[component]} {component + 1}")
+    elif(components[component] in secondComponents) :
+        componentsDoc.add_paragraph(f"\t{components[component]} {component + 1}")
+    elif(components[component] in thirdComponents) :
+        componentsDoc.add_paragraph(f"\t\t{components[component]} {component + 1}")
+    elif(components[component] in fourthComponents) :
+        componentsDoc.add_paragraph(f"\t\t\t{components[component]} {component + 1}")
+    elif(components[component] in fifthComponents) :
+        componentsDoc.add_paragraph(f"\t\t\t\t{components[component]} {component + 1}")
+    else :
+        break
+componentsDoc.save("components.docx")
