@@ -17,7 +17,7 @@ def formatList(raw, clean, size) :
                 clean.append(raw[group][dex])
     return
 
-claims = getText("test2.docx")
+claims = getText("examples/test2.docx")
 components = []
 firstComponents = []
 lowerComponents = []
@@ -146,20 +146,3 @@ for line in range(len(paragraphs[0])) :
                 components.insert(components.index(parentComponent) + 1, f"{chunk[len(chunk) - i - 1]}")
 
 # print(f"\n{components}")
-
-#generate components word document with component numbers
-componentsDoc = docx.Document()
-for component in range(0, len(components)) :
-    if(components[component] in firstComponents) :
-        componentsDoc.add_paragraph(f"{components[component]} {component + 1}")
-    elif(components[component] in secondComponents) :
-        componentsDoc.add_paragraph(f"\t{components[component]} {component + 1}")
-    elif(components[component] in thirdComponents) :
-        componentsDoc.add_paragraph(f"\t\t{components[component]} {component + 1}")
-    elif(components[component] in fourthComponents) :
-        componentsDoc.add_paragraph(f"\t\t\t{components[component]} {component + 1}")
-    elif(components[component] in fifthComponents) :
-        componentsDoc.add_paragraph(f"\t\t\t\t{components[component]} {component + 1}")
-    else :
-        break
-componentsDoc.save("components.docx")
