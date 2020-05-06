@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import docx
 import re
 
@@ -24,6 +25,8 @@ def findAbbreviations(everyLine) :
         abbrLength = len(range(compLetters.index("("), compLetters.index(")"))) - 1
         abbrWithParens = ''.join(compLetters[compLetters.index("(") : compLetters.index(")") + 1])
         abbr = ''.join(compLetters[compLetters.index("(") + 1 : compLetters.index(")")])
+        if abbr == "EM" :
+            abbrLength--
         compWords = everyLine.replace('-', ' ').split(' ')
         compDelete = compWords[: compWords.index(abbrWithParens) - abbrLength] + compWords[compWords.index(abbrWithParens) :]
         compPreSwap = ' '.join(compDelete)
@@ -32,7 +35,7 @@ def findAbbreviations(everyLine) :
     else :
         return everyLine
 
-claims = getText("examples/Specs_7.docx")
+claims = getText("examples/Specs2.docx")
 components = []
 firstComponents = []
 lowerComponents = []
@@ -86,10 +89,11 @@ for line in range(len(paragraphs)) :
     key = re.findall(r5, paragraphs[line])
     cleanKey = []
     formatList(key, cleanKey, 2)
+    altKey = re.findall(r7, paragraphs[line])
     check = re.findall(r6, paragraphs[line])
     inlineComps = re.findall(r3, paragraphs[line])
     #check if the line contains new subcomponents
-    if key :
+    if key or altKey:
         chunk = []
         #ordered list of parent components
         parentComponent = cleanKey[len(cleanKey) - 1]

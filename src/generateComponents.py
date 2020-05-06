@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import docx
 from makeList import components as components
 from makeList import firstComponents as firstComponents
@@ -21,4 +22,4 @@ for component in range(0, len(components)) :
     else :
         print("error: sixth-level components present")
         break
-componentsDoc.save("../components.docx")
+componentsDoc.save("components.docx")
